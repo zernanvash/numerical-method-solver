@@ -1,0 +1,40 @@
+file(REMOVE_RECURSE
+  "CMakeFiles/NumericalRootFinder_autogen.dir/AutogenUsed.txt"
+  "CMakeFiles/NumericalRootFinder_autogen.dir/ParseCache.txt"
+  "NumericalRootFinder_autogen"
+  "CMakeFiles/NumericalRootFinder.dir/NumericalRootFinder_autogen/mocs_compilation.cpp.obj"
+  "CMakeFiles/NumericalRootFinder.dir/NumericalRootFinder_autogen/mocs_compilation.cpp.obj.d"
+  "CMakeFiles/NumericalRootFinder.dir/src/AppConfig.cpp.obj"
+  "CMakeFiles/NumericalRootFinder.dir/src/AppConfig.cpp.obj.d"
+  "CMakeFiles/NumericalRootFinder.dir/src/BisectionSolver.cpp.obj"
+  "CMakeFiles/NumericalRootFinder.dir/src/BisectionSolver.cpp.obj.d"
+  "CMakeFiles/NumericalRootFinder.dir/src/CRTOverlay.cpp.obj"
+  "CMakeFiles/NumericalRootFinder.dir/src/CRTOverlay.cpp.obj.d"
+  "CMakeFiles/NumericalRootFinder.dir/src/ExportManager.cpp.obj"
+  "CMakeFiles/NumericalRootFinder.dir/src/ExportManager.cpp.obj.d"
+  "CMakeFiles/NumericalRootFinder.dir/src/FunctionParser.cpp.obj"
+  "CMakeFiles/NumericalRootFinder.dir/src/FunctionParser.cpp.obj.d"
+  "CMakeFiles/NumericalRootFinder.dir/src/GraphWidget.cpp.obj"
+  "CMakeFiles/NumericalRootFinder.dir/src/GraphWidget.cpp.obj.d"
+  "CMakeFiles/NumericalRootFinder.dir/src/MainWindow.cpp.obj"
+  "CMakeFiles/NumericalRootFinder.dir/src/MainWindow.cpp.obj.d"
+  "CMakeFiles/NumericalRootFinder.dir/src/NewtonSolver.cpp.obj"
+  "CMakeFiles/NumericalRootFinder.dir/src/NewtonSolver.cpp.obj.d"
+  "CMakeFiles/NumericalRootFinder.dir/src/SecantSolver.cpp.obj"
+  "CMakeFiles/NumericalRootFinder.dir/src/SecantSolver.cpp.obj.d"
+  "CMakeFiles/NumericalRootFinder.dir/src/ThemeManager.cpp.obj"
+  "CMakeFiles/NumericalRootFinder.dir/src/ThemeManager.cpp.obj.d"
+  "CMakeFiles/NumericalRootFinder.dir/src/main.cpp.obj"
+  "CMakeFiles/NumericalRootFinder.dir/src/main.cpp.obj.d"
+  "NumericalRootFinder.exe"
+  "NumericalRootFinder.exe.manifest"
+  "NumericalRootFinder.pdb"
+  "NumericalRootFinder_autogen/mocs_compilation.cpp"
+  "NumericalRootFinder_autogen/timestamp"
+  "libNumericalRootFinder.dll.a"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang CXX)
+  include(CMakeFiles/NumericalRootFinder.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()
