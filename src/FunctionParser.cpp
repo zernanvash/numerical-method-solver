@@ -59,7 +59,6 @@ struct Parser {
     }
 
     // Forward declare
-    std::function<double(double)> parseExpr();
 
     std::function<double(double)> parseBase() {
         skipSpaces();
