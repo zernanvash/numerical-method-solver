@@ -28,7 +28,7 @@ Makefile
 *.obj
 *.pdb
 
-# Deployment folders/files from windeployqt
+# windeployqt deployment files/folders
 platforms/
 styles/
 imageformats/
