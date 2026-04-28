@@ -1,0 +1,50 @@
+# Build folders
+build/
+cmake-build-*/
+out/
+debug/
+release/
+Debug/
+Release/
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+
+# Qt Creator files
+*.user
+*.user.*
+*.autosave
+
+# Compiled binaries
+*.exe
+*.dll
+*.lib
+*.a
+*.o
+*.obj
+*.pdb
+
+# Deployment folders/files from windeployqt
+platforms/
+styles/
+imageformats/
+iconengines/
+translations/
+tls/
+networkinformation/
+generic/
+sqldrivers/
+printsupport/
+Qt6*.dll
+D3Dcompiler_*.dll
+libgcc*.dll
+libstdc++*.dll
+libwinpthread*.dll
+
+# OS junk
+.DS_Store
+Thumbs.db
