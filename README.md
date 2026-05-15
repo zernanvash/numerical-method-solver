@@ -1,85 +1,298 @@
 # Numerical Method Solver
 
-## Project Overview
+Numerical Method Solver is an interactive numerical methods program for learning how equations are solved step by step. It has two main modes:
 
-**Numerical Method Solver** is a C++ desktop application that solves nonlinear equations using three common root-finding methods:
+- **Root-Finding Mode** for solving `f(x) = 0`
+- **Differential Equation Simulation Mode** for solving initial value problems of the form `dy/dt = f(t, y)`
 
-- Bisection Method
-- Newton-Raphson Method
-- Secant Method
+Download the portable Windows build from the release page:
 
-The application includes a graphical user interface built with **Qt 6**. It allows the user to enter a mathematical function, choose a numerical method, provide the required input values, and view the result through both a table and a graph.
+https://github.com/zernanvash/numerical-method-solver/releases/tag/v1.1.0
 
-The interface uses a retro CRT-inspired design with configurable color themes, scanline effects, graph animations, and export features.
-
-Portable Windows build:
-
-- Download [`NumericalRootFinder-portable.zip`](dist/NumericalRootFinder-portable.zip)
-- Extract the zip and run `NumericalRootFinder.exe`
-- No Qt Desktop installation is required
+Extract the zip from the release and run `NumericalRootFinder.exe`.
 
 ---
 
-## Purpose of the Project
+## Root-Finding Mode
 
-The purpose of this project is to help users understand how numerical root-finding methods work. Instead of only showing the final answer, the application also displays the iteration process so users can see how each method approaches the root.
+Root-Finding Mode solves equations where the goal is to find an `x` value that makes:
 
-This makes the application useful for:
+```txt
+f(x) = 0
+```
 
-- learning numerical methods
-- comparing different root-finding algorithms
-- visualizing function behavior
-- exporting computed results for documentation or reports
+The program shows the full iteration process instead of only showing the final answer. Each method updates its approximation differently, and the table records every step.
+
+### Function Input
+
+Enter a function using `x` as the variable:
+
+```txt
+x^3 - x - 2
+sin(x) - 0.5
+exp(x) - 3
+x^2 - 4
+```
+
+Supported operators and functions:
+
+```txt
++  -  *  /  ^
+sin, cos, tan
+sqrt, log, ln, log10
+exp, abs
+pi, e
+```
+
+Use explicit multiplication. For example, type `2*x`, not `2x`.
 
 ---
 
-## Technologies Used
+## Bisection Method
 
-| Component | Technology |
-|---|---|
-| Programming Language | C++ |
-| GUI Framework | Qt 6 Widgets |
-| Build System | CMake |
-| Compiler | MinGW / MSVC compatible |
-| Graph Rendering | Custom `QPainter` widget |
-| Settings System | Qt-based in-app configuration |
-| Export Formats | TXT and CSV |
+Bisection is a bracketing method. It needs two starting values, `a` and `b`, where the function changes sign:
+
+```txt
+f(a) * f(b) < 0
+```
+
+The root must be inside the interval `[a, b]`. The method repeatedly cuts the interval in half.
+
+Formula:
+
+```txt
+c = (a + b) / 2
+```
+
+Then the program checks which side still contains the sign change:
+
+```txt
+if f(a) * f(c) < 0:
+    root is between a and c
+else:
+    root is between c and b
+```
+
+Required inputs:
+
+```txt
+f(x)
+a
+b
+tolerance
+maximum iterations
+```
+
+Table meaning:
+
+```txt
+Iteration: current step number
+X Value: midpoint c
+f(X): function value at c
+Error: interval/approximation error
+Status: INIT, UPDATE, CONVERGED, or MAX_ITER
+```
+
+Graph behavior:
+
+- Shows the function curve
+- Highlights the shrinking interval
+- Marks each midpoint approximation
+- Shows the final/root approximation when available
 
 ---
 
-## Main Features
+## Newton-Raphson Method
 
-## Differential Equation Simulation
+Newton-Raphson starts from one guess, `x0`, and uses the slope of the function to jump toward the root.
 
-The app includes an **ODE Simulation Mode** for initial value problems:
+Formula:
+
+```txt
+x(n+1) = x(n) - f(x(n)) / f'(x(n))
+```
+
+In this program, the derivative is estimated numerically with a central difference:
+
+```txt
+f'(x) ≈ (f(x + h) - f(x - h)) / (2h)
+```
+
+Required inputs:
+
+```txt
+f(x)
+x0
+tolerance
+maximum iterations
+```
+
+Table meaning:
+
+```txt
+Iteration: current step number
+X Value: current approximation
+f(X): function value at the approximation
+Error: distance from the previous approximation
+Status: UPDATE, CONVERGED, or MAX_ITER
+```
+
+Graph behavior:
+
+- Shows the function curve
+- Draws tangent-line movement
+- Marks the current approximation
+- Shows how the tangent intersects the x-axis to produce the next guess
+
+Newton-Raphson is fast when the starting guess is good, but it can fail when the derivative is close to zero or the function behaves badly near the guess.
+
+---
+
+## Secant Method
+
+The Secant Method uses two starting guesses instead of a derivative. It draws a line through two function points and uses that line to estimate the next root approximation.
+
+Formula:
+
+```txt
+x(n+1) = x(n) - f(x(n)) * (x(n) - x(n-1)) / (f(x(n)) - f(x(n-1)))
+```
+
+Required inputs:
+
+```txt
+f(x)
+x0
+x1
+tolerance
+maximum iterations
+```
+
+Table meaning:
+
+```txt
+Iteration: current step number
+X Value: current approximation
+f(X): function value at the approximation
+Error: distance from the previous approximation
+Status: UPDATE, CONVERGED, or MAX_ITER
+```
+
+Graph behavior:
+
+- Shows the function curve
+- Draws secant lines between approximation points
+- Shows how each secant line estimates the next root
+- Marks the current approximation
+
+The Secant Method is often faster than Bisection and does not need a derivative, but it is less guaranteed than Bisection.
+
+---
+
+## Differential Equation Simulation Mode
+
+Differential Equation Simulation Mode solves initial value problems:
 
 ```txt
 dy/dt = f(t, y)
 y(t0) = y0
 ```
 
-Use the mode selector to switch between root-finding and ODE simulation. In ODE
-mode, the function field accepts expressions in `t` and `y`, including
-`0.5*y`, `t + y`, `-0.07*(y - 25)`, and `sin(t) + y`.
+The program approximates the solution step by step. In this mode, the expression uses:
 
-Supported operators and functions include `+`, `-`, `*`, `/`, `^`, `sin`,
-`cos`, `tan`, `sqrt`, `log`, `ln`, `log10`, `exp`, `abs`, `pi`, and `e`.
+```txt
+t = independent variable
+y = current solution value
+```
 
-### Euler Method
+Example expressions:
 
-Euler's method advances the solution with the current slope:
+```txt
+0.5*y
+t + y
+-y
+sin(t) + y
+-0.07*(y - 25)
+```
+
+Required inputs:
+
+```txt
+dy/dt expression: f(t, y)
+initial t: t0
+initial y: y0
+step size: h
+steps: number of iterations
+method: Euler or RK4
+```
+
+Graph behavior:
+
+- Uses `t` on the x-axis
+- Uses `y` on the y-axis
+- Draws points for each approximation
+- Connects the points with line segments
+- Marks the final approximation
+
+---
+
+## Euler Method
+
+Euler's Method uses the current slope to move forward one step.
+
+Formula:
 
 ```txt
 y(n+1) = y(n) + h * f(t(n), y(n))
 t(n+1) = t(n) + h
 ```
 
-The Euler table shows `Iteration`, `t`, `y`, `f(t,y)`, `Next t`, `Next y`,
-and `Status`.
+Where:
 
-### RK4 Method
+```txt
+h = step size
+f(t, y) = slope at the current point
+```
 
-Runge-Kutta 4th Order uses four slope samples per step:
+Table columns:
+
+```txt
+Iteration
+t
+y
+f(t,y)
+Next t
+Next y
+Status
+```
+
+Example:
+
+```txt
+dy/dt = 0.5*y
+t0 = 0
+y0 = 100
+h = 0.1
+steps = 5
+```
+
+The first step is:
+
+```txt
+f(0, 100) = 0.5 * 100 = 50
+next y = 100 + 0.1 * 50 = 105
+next t = 0.1
+```
+
+Euler is simple and useful for learning, but it is usually less accurate than RK4 for the same step size.
+
+---
+
+## RK4 Method
+
+Runge-Kutta 4th Order, or RK4, samples the slope four times during each step. It combines those slopes into a more accurate update.
+
+Formula:
 
 ```txt
 k1 = f(tn, yn)
@@ -91,21 +304,26 @@ y(n+1) = yn + (h/6) * (k1 + 2*k2 + 2*k3 + k4)
 t(n+1) = tn + h
 ```
 
-The RK4 table shows `Iteration`, `t`, `y`, `k1`, `k2`, `k3`, `k4`, `Next t`,
-`Next y`, and `Status`.
-
-### Required Inputs
+Table columns:
 
 ```txt
-dy/dt expression: f(t, y)
-initial t: t0
-initial y: y0
-step size: h
-number of steps: n
-method: Euler or RK4
+Iteration
+t
+y
+k1
+k2
+k3
+k4
+Next t
+Next y
+Status
 ```
 
-### Example Models
+RK4 is more accurate than Euler because it estimates the behavior inside the step, not only at the beginning of the step.
+
+---
+
+## ODE Example Models
 
 Population growth:
 
@@ -117,7 +335,7 @@ h = 0.1
 steps = 20
 ```
 
-Newton's law of cooling:
+Cooling model:
 
 ```txt
 f(t,y) = -0.07*(y - 25)
@@ -127,7 +345,7 @@ h = 1
 steps = 20
 ```
 
-Simple motion with constant velocity:
+Constant velocity motion:
 
 ```txt
 f(t,y) = 5
@@ -137,652 +355,112 @@ h = 1
 steps = 20
 ```
 
-### Graph And Export
-
-In ODE mode, the graph uses `t` on the x-axis and `y` on the y-axis, drawing
-the approximation points and line segments for each step. TXT and CSV exports
-include the method, differential equation, initial condition, step size, step
-count, final `t`, final `y`, and the full iteration table.
-
 ---
 
-## 1. Function Input
+## Output Table
 
-The user can enter a mathematical expression such as:
+The table is meant to make the method readable as a computation, not just a final answer.
+
+For root-finding methods, the table tracks:
 
 ```txt
-x^3 - x - 2
-```
-
-The function parser supports common operators and functions:
-
-```txt
-+  -  *  /  ^
-sin(x), cos(x), tan(x)
-sqrt(x), log(x), ln(x), log10(x)
-exp(x), abs(x)
-pi, e
-```
-
-Example supported inputs:
-
-```txt
-x^2 - 4
-sin(x) - 0.5
-exp(x) - 3
-x^3 - x - 2
-```
-
----
-
-## 2. Supported Numerical Methods
-
-## Bisection Method
-
-The Bisection Method is a bracketing method. It needs two starting values, `a` and `b`, where the function changes sign.
-
-This means:
-
-```txt
-f(a) and f(b) must have opposite signs
-```
-
-The method repeatedly divides the interval in half until the root is found within the given tolerance.
-
-### Required inputs:
-
-```txt
-a
-b
-tolerance
-maximum iterations
-```
-
-### Best used when:
-
-- the root is known to be inside an interval
-- reliability is more important than speed
-- the function changes sign between two points
-
----
-
-## Newton-Raphson Method
-
-The Newton-Raphson Method uses one starting guess and the slope of the function to move toward the root.
-
-The application estimates the derivative numerically, so the user does not need to manually enter the derivative.
-
-### Required inputs:
-
-```txt
-x0
-tolerance
-maximum iterations
-```
-
-### Best used when:
-
-- the starting guess is close to the root
-- faster convergence is needed
-- the function behaves smoothly near the root
-
----
-
-## Secant Method
-
-The Secant Method uses two starting guesses. It is similar to Newton-Raphson, but it does not require computing the derivative directly.
-
-Instead, it uses a line through two points on the function to estimate the next root approximation.
-
-### Required inputs:
-
-```txt
-x0
-x1
-tolerance
-maximum iterations
-```
-
-### Best used when:
-
-- two starting guesses are available
-- a derivative is not known
-- faster convergence than bisection is desired
-
----
-
-## 3. Graphical Visualization
-
-The application includes a custom graph panel that displays:
-
-- the plotted function curve
-- x-axis and y-axis
-- grid lines
-- current root approximation
-- method-specific construction lines
-
-Each method has a different visual behavior:
-
-| Method | Graph Visualization |
-|---|---|
-| Bisection | Shows the shrinking interval between `a` and `b` |
-| Newton-Raphson | Shows tangent-line movement toward the root |
-| Secant | Shows secant lines formed by two approximation points |
-
-The graph includes CRT-style effects such as scanlines, dithering, vignette shading, and animated graph reveal.
-
----
-
-## 4. Iteration Table
-
-Every computation produces an iteration table.
-
-The table includes:
-
-```txt
-Iteration number
-Current x value
-f(x)
-Error
-Status
-```
-
-Example:
-
-| Iteration | X Value | f(X) | Error | Status |
-|---|---:|---:|---:|---|
-| 1 | 1.500000 | -0.125000 | 0.500000 | INIT |
-| 2 | 1.750000 | 1.609375 | 0.250000 | UPDATE |
-| 3 | 1.625000 | 0.666016 | 0.125000 | UPDATE |
-
-Possible status values:
-
-```txt
-INIT
-UPDATE
-CONVERGED
-MAX_ITER
-```
-
----
-
-## 5. In-App Settings
-
-The application includes an in-app settings panel. This allows users to customize the interface without editing the source code.
-
-Available settings include:
-
-```txt
-Theme color
-UI scale
-Font size
-Animation speed
-Scanlines on/off
-Vignette on/off
-Graph dithering on/off
-Boot splash on/off
-Default tolerance
-Default maximum iterations
-```
-
----
-
-## 6. Color Themes
-
-The user can switch between multiple monochrome CRT-style themes.
-
-Available themes:
-
-```txt
-Amber
-Yellow
-Green
-Red
-Blue
-White
-```
-
-These themes change the visual style of the interface while keeping the same layout and functionality.
-
----
-
-## 7. Export Features
-
-The application can export computation results into external files.
-
-Supported export formats:
-
-```txt
-TXT
-CSV
-```
-
-### TXT Export
-
-The TXT export creates a readable report containing:
-
-- function used
-- selected method
-- tolerance
-- maximum iterations
-- final root
-- final function value
-- iteration table
-
-### CSV Export
-
-The CSV export saves the iteration table in a spreadsheet-friendly format.
-
-CSV files can be opened using:
-
-- Microsoft Excel
-- Google Sheets
-- LibreOffice Calc
-- other spreadsheet tools
-
-Example CSV output:
-
-```csv
-Iteration,X Value,f(x),Error,Status
-1,1.500000,-0.125000,0.500000,INIT
-2,1.750000,1.609375,0.250000,UPDATE
-3,1.625000,0.666016,0.125000,UPDATE
-```
-
----
-
-## Project Folder Structure
-
-The project uses a clean structure that separates headers, source files, and build configuration.
-
-```txt
-NumericalRootFinder/
-│
-├── CMakeLists.txt
-│
-├── include/
-│   ├── AppConfig.h
-│   ├── BisectionSolver.h
-│   ├── CRTOverlay.h
-│   ├── ExportManager.h
-│   ├── FunctionParser.h
-│   ├── GraphWidget.h
-│   ├── IterationRecord.h
-│   ├── MainWindow.h
-│   ├── NewtonSolver.h
-│   ├── SecantSolver.h
-│   └── ThemeManager.h
-│
-├── src/
-│   ├── AppConfig.cpp
-│   ├── BisectionSolver.cpp
-│   ├── CRTOverlay.cpp
-│   ├── ExportManager.cpp
-│   ├── FunctionParser.cpp
-│   ├── GraphWidget.cpp
-│   ├── main.cpp
-│   ├── MainWindow.cpp
-│   ├── NewtonSolver.cpp
-│   ├── SecantSolver.cpp
-│   └── ThemeManager.cpp
-│
-└── README.md
-```
-
----
-
-## Important Source Files
-
-## `main.cpp`
-
-This is the entry point of the program. It creates the Qt application, shows the boot splash screen if enabled, and opens the main window.
-
----
-
-## `MainWindow.h` and `MainWindow.cpp`
-
-These files control the main graphical interface.
-
-They handle:
-
-- function input
-- method selection
-- parameter fields
-- solve, step, reset buttons
-- settings dialog
-- export buttons
-- result display
-- iteration table
-- connection between UI and solver logic
-
----
-
-## `FunctionParser.h` and `FunctionParser.cpp`
-
-These files convert the user's typed mathematical expression into a callable function.
-
-For example, this input:
-
-```txt
-x^3 - x - 2
-```
-
-is converted into a function that the solver can evaluate at different `x` values.
-
-The parser also validates expressions and provides numerical derivative support for Newton-Raphson Method.
-
----
-
-## `BisectionSolver.h` and `BisectionSolver.cpp`
-
-These files contain the implementation of the Bisection Method.
-
-The solver returns a list of iteration records instead of only returning the final root. This allows the GUI to show the full process in the table and graph.
-
----
-
-## `NewtonSolver.h` and `NewtonSolver.cpp`
-
-These files contain the implementation of the Newton-Raphson Method.
-
-The derivative is computed using central difference approximation.
-
----
-
-## `SecantSolver.h` and `SecantSolver.cpp`
-
-These files contain the implementation of the Secant Method.
-
-The solver uses two previous points to estimate the next root approximation.
-
----
-
-## `IterationRecord.h`
-
-This file defines the structure used to store every iteration.
-
-Each record stores:
-
-```txt
-iteration number
-x value
+iteration
+current x approximation
 f(x)
 error
-method-specific values
 status
 ```
 
----
-
-## `GraphWidget.h` and `GraphWidget.cpp`
-
-These files draw the graph manually using Qt's painting system.
-
-The graph handles:
-
-- function curve rendering
-- grid and axes
-- root marker
-- bisection interval shading
-- Newton tangent lines
-- Secant lines
-- scanline reveal animation
-- CRT-style graph effects
-
----
-
-## `CRTOverlay.h` and `CRTOverlay.cpp`
-
-These files create the CRT overlay effect on top of the window.
-
-The overlay can display:
-
-- horizontal scanlines
-- corner vignette shading
-
-These effects can be enabled or disabled through the settings dialog.
-
----
-
-## `AppConfig.h` and `AppConfig.cpp`
-
-These files store and manage the user's configuration.
-
-The configuration includes:
+For ODE methods, the table tracks:
 
 ```txt
-theme
-UI scale
-font size
-animation speed
-visual effect toggles
-default tolerance
-default maximum iterations
+iteration
+current t
+current y
+slope or RK4 slope samples
+next t
+next y
+status
 ```
 
----
-
-## `ThemeManager.h` and `ThemeManager.cpp`
-
-These files generate the Qt stylesheet used by the application.
-
-Instead of using one fixed color theme, the app builds the stylesheet dynamically based on the selected theme.
+Statuses indicate whether a row is an update, a convergence result, or an error/max-iteration condition.
 
 ---
 
-## `ExportManager.h` and `ExportManager.cpp`
+## Graph Panel
 
-These files handle exporting results.
+The graph changes depending on the active mode.
 
-They create:
+Root-Finding Mode:
 
-- TXT report files
-- CSV spreadsheet files
+- Plots `f(x)`
+- Shows the x-axis root target
+- Draws method-specific visual steps
+- Marks the best/current root approximation
+
+ODE Simulation Mode:
+
+- Plots the approximation path as `t` vs `y`
+- Draws connected step points
+- Marks the final point
+
+The graph uses a CRT-style scan reveal, grid, pixel-like text, and theme colors to match the rest of the interface.
 
 ---
 
-## How to Build the Project
+## Exporting Results
 
-## Requirements
-
-Before building the project, install:
+The program can export results as:
 
 ```txt
-Qt 6
-Qt Creator
-CMake
-MinGW or MSVC compiler
+TXT report
+CSV table
 ```
 
-The easiest setup is:
+Root-finding exports include:
 
 ```txt
-Qt 6 + Qt Creator + MinGW 64-bit
+function
+method
+tolerance
+maximum iterations
+final root approximation
+final f(x)
+iteration table
 ```
 
----
-
-## Build Steps in Qt Creator
-
-1. Open Qt Creator.
-2. Click **File > Open File or Project**.
-3. Select `CMakeLists.txt`.
-4. Choose a Qt 6 Desktop Kit.
-5. Click **Configure Project**.
-6. Build and run the project.
-
-Recommended rebuild sequence after major changes:
+ODE exports include:
 
 ```txt
-Build > Clean All
-Build > Run CMake
-Build > Rebuild All
+differential equation
+method
+initial condition
+step size
+number of steps
+final t
+final y
+full iteration table
 ```
 
 ---
 
-## How to Run the Application
+## Notes And Limits
 
-After building, run the application from Qt Creator using the green Run button.
-
-Basic usage:
-
-1. Enter a function.
-2. Select a method.
-3. Enter the required parameters.
-4. Set tolerance and maximum iterations.
-5. Click **Solve**.
-6. View the graph and iteration table.
-7. Export results if needed.
+- Expressions must use explicit multiplication, such as `2*x`.
+- Root-finding expressions use `x`.
+- ODE expressions use `t` and `y`.
+- Bisection requires the starting interval to contain a sign change.
+- Newton-Raphson can fail when the numerical derivative is too close to zero.
+- Very large ODE values can grow quickly depending on the step size and equation.
 
 ---
 
-## Example Use Case
+## Basic Workflow
 
-### Function
-
-```txt
-x^3 - x - 2
-```
-
-### Method
-
-```txt
-Bisection
-```
-
-### Parameters
-
-```txt
-a = 1
-b = 2
-tolerance = 0.0001
-maximum iterations = 50
-```
-
-### Expected behavior
-
-The application will repeatedly divide the interval between `1` and `2` until it gets close to the root.
-
-The graph will show the interval shrinking, and the table will show the computed values for each iteration.
-
----
-
-## Portability and Deployment
-
-When sharing the source code, only include project files such as:
-
-```txt
-CMakeLists.txt
-include/
-src/
-README.md
-.gitignore
-```
-
-Do not include build files such as:
-
-```txt
-build/
-*.exe
-*.dll
-CMakeFiles/
-CMakeCache.txt
-```
-
-For running the compiled application on another Windows device, use Qt's deployment tool:
-
-```bash
-windeployqt NumericalRootFinder.exe --release
-```
-
-This copies the Qt runtime files required by the executable.
-
----
-
-## Recommended `.gitignore`
-
-Use a `.gitignore` file to avoid uploading build files to GitHub.
-
-```gitignore
-build/
-cmake-build-*/
-out/
-debug/
-release/
-Debug/
-Release/
-
-CMakeCache.txt
-CMakeFiles/
-cmake_install.cmake
-Makefile
-*.cmake
-
-*.user
-*.user.*
-*.autosave
-
-*.exe
-*.dll
-*.lib
-*.a
-*.o
-*.obj
-*.pdb
-
-platforms/
-styles/
-imageformats/
-iconengines/
-translations/
-tls/
-networkinformation/
-generic/
-sqldrivers/
-printsupport/
-Qt6*.dll
-D3Dcompiler_*.dll
-libgcc*.dll
-libstdc++*.dll
-libwinpthread*.dll
-
-.DS_Store
-Thumbs.db
-```
-
----
-
-## Limitations
-
-The project currently has some limitations:
-
-- It only supports single-variable functions using `x`.
-- It does not support implicit multiplication such as `2x`; the user must type `2*x`.
-- Newton-Raphson Method may fail if the derivative is too close to zero.
-- Bisection Method requires opposite signs at the interval endpoints.
-- CSV export is supported, but direct `.xlsx` export is not included yet.
-
----
-
-## Possible Future Improvements
-
-Future versions may include:
-
-- direct `.xlsx` export
-- PDF report export
-- graph image export
-- more numerical methods
-- better expression autocomplete
-- saved computation history
-- light/dark layout modes
-- zoom and pan controls for the graph
-- comparison mode for all three methods
-
----
-
-## Conclusion
-
-The Numerical Method Solver combines numerical computation, graph visualization, and a customizable retro-style interface. It provides an interactive way to solve equations and understand how different root-finding methods approach a solution.
-
-By showing the graph, iteration table, final result, and exportable reports, the application is useful for both learning and presenting numerical method computations.
+1. Choose a mode.
+2. Enter the expression.
+3. Choose the numerical method.
+4. Enter the required parameters.
+5. Click **Solve** to fill the table and graph.
+6. Use **Step** to reveal the computation one row at a time.
+7. Export TXT or CSV if you need a report.
