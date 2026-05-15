@@ -12,6 +12,12 @@ The application includes a graphical user interface built with **Qt 6**. It allo
 
 The interface uses a retro CRT-inspired design with configurable color themes, scanline effects, graph animations, and export features.
 
+Portable Windows build:
+
+- Download [`NumericalRootFinder-portable.zip`](dist/NumericalRootFinder-portable.zip)
+- Extract the zip and run `NumericalRootFinder.exe`
+- No Qt Desktop installation is required
+
 ---
 
 ## Purpose of the Project
@@ -42,6 +48,103 @@ This makes the application useful for:
 ---
 
 ## Main Features
+
+## Differential Equation Simulation
+
+The app includes an **ODE Simulation Mode** for initial value problems:
+
+```txt
+dy/dt = f(t, y)
+y(t0) = y0
+```
+
+Use the mode selector to switch between root-finding and ODE simulation. In ODE
+mode, the function field accepts expressions in `t` and `y`, including
+`0.5*y`, `t + y`, `-0.07*(y - 25)`, and `sin(t) + y`.
+
+Supported operators and functions include `+`, `-`, `*`, `/`, `^`, `sin`,
+`cos`, `tan`, `sqrt`, `log`, `ln`, `log10`, `exp`, `abs`, `pi`, and `e`.
+
+### Euler Method
+
+Euler's method advances the solution with the current slope:
+
+```txt
+y(n+1) = y(n) + h * f(t(n), y(n))
+t(n+1) = t(n) + h
+```
+
+The Euler table shows `Iteration`, `t`, `y`, `f(t,y)`, `Next t`, `Next y`,
+and `Status`.
+
+### RK4 Method
+
+Runge-Kutta 4th Order uses four slope samples per step:
+
+```txt
+k1 = f(tn, yn)
+k2 = f(tn + h/2, yn + h*k1/2)
+k3 = f(tn + h/2, yn + h*k2/2)
+k4 = f(tn + h, yn + h*k3)
+
+y(n+1) = yn + (h/6) * (k1 + 2*k2 + 2*k3 + k4)
+t(n+1) = tn + h
+```
+
+The RK4 table shows `Iteration`, `t`, `y`, `k1`, `k2`, `k3`, `k4`, `Next t`,
+`Next y`, and `Status`.
+
+### Required Inputs
+
+```txt
+dy/dt expression: f(t, y)
+initial t: t0
+initial y: y0
+step size: h
+number of steps: n
+method: Euler or RK4
+```
+
+### Example Models
+
+Population growth:
+
+```txt
+f(t,y) = 0.5*y
+t0 = 0
+y0 = 100
+h = 0.1
+steps = 20
+```
+
+Newton's law of cooling:
+
+```txt
+f(t,y) = -0.07*(y - 25)
+t0 = 0
+y0 = 90
+h = 1
+steps = 20
+```
+
+Simple motion with constant velocity:
+
+```txt
+f(t,y) = 5
+t0 = 0
+y0 = 0
+h = 1
+steps = 20
+```
+
+### Graph And Export
+
+In ODE mode, the graph uses `t` on the x-axis and `y` on the y-axis, drawing
+the approximation points and line segments for each step. TXT and CSV exports
+include the method, differential equation, initial condition, step size, step
+count, final `t`, final `y`, and the full iteration table.
+
+---
 
 ## 1. Function Input
 

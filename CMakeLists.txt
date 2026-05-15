@@ -17,6 +17,9 @@ set(SOURCES
     src/BisectionSolver.cpp
     src/NewtonSolver.cpp
     src/SecantSolver.cpp
+    src/OdeFunctionParser.cpp
+    src/EulerOdeSolver.cpp
+    src/RK4OdeSolver.cpp
     src/AppConfig.cpp
     src/ThemeManager.cpp
     src/ExportManager.cpp
@@ -30,6 +33,10 @@ set(HEADERS
     include/BisectionSolver.h
     include/NewtonSolver.h
     include/SecantSolver.h
+    include/OdeIterationRecord.h
+    include/OdeFunctionParser.h
+    include/EulerOdeSolver.h
+    include/RK4OdeSolver.h
     include/IterationRecord.h
     include/AppConfig.h
     include/ThemeManager.h

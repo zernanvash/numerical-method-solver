@@ -21,8 +21,8 @@ ThemePalette ThemeManager::palette(const QString& name) {
     const QString n = name.trimmed().toLower();
 
     if (n == "yellow") {
-        return makeTheme("Yellow", "#0A0A00", "#141400", "#050500", "#555500",
-                         "#999933", "#FFFF66", "#FFF2A0", "#FF6B5E");
+        return makeTheme("Yellow", "#060600", "#101000", "#020200", "#625B12",
+                         "#A39837", "#F6E85A", "#FFF09A", "#FF6B5E");
     }
     if (n == "green") {
         return makeTheme("Green", "#001008", "#001A0D", "#000804", "#2F7A42",
@@ -41,8 +41,8 @@ ThemePalette ThemeManager::palette(const QString& name) {
                          "#888888", "#EAEAEA", "#FFFFFF", "#FF6B5E");
     }
 
-    return makeTheme("Amber", "#0A0800", "#100D00", "#050300", "#4A3400",
-                     "#7A5800", "#FFA800", "#FFC840", "#FF6B5E");
+    return makeTheme("Amber", "#050400", "#0D0A00", "#020200", "#5C4105",
+                     "#9A7014", "#FFB34A", "#FFE08A", "#FF6B5E");
 }
 
 QString ThemeManager::buildStyleSheet(const AppConfig& cfg) {
@@ -57,7 +57,7 @@ QString ThemeManager::buildStyleSheet(const AppConfig& cfg) {
 QWidget {
     background-color: %1;
     color: %6;
-    font-family: "Courier New";
+    font-family: "Fixedsys", "Terminal", "Courier New";
     font-size: %9px;
 }
 QMainWindow, QWidget#central {
@@ -167,7 +167,7 @@ QTableWidget {
     border: 1px solid %4;
     gridline-color: %2;
     font-size: %10px;
-    font-family: "Courier New";
+    font-family: "Fixedsys", "Terminal", "Courier New";
 }
 QTableWidget::item {
     padding: 2px 6px;

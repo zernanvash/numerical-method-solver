@@ -87,3 +87,122 @@ bool ExportManager::exportCsv(const QString& filePath,
 
     return true;
 }
+
+bool ExportManager::exportOdeTxt(const QString& filePath,
+                                 const QString& expressionText,
+                                 const QString& methodText,
+                                 double t0,
+                                 double y0,
+                                 double h,
+                                 int steps,
+                                 const std::vector<OdeIterationRecord>& records,
+                                 QString* errorMessage) {
+    QFile file(filePath);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        if (errorMessage) *errorMessage = file.errorString();
+        return false;
+    }
+
+    QTextStream out(&file);
+    out << "ODE SIMULATION REPORT\n";
+    out << "=====================\n\n";
+    out << "Generated              : " << QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss") << "\n";
+    out << "Method                 : " << methodText << "\n";
+    out << "Differential equation  : dy/dt = " << expressionText << "\n";
+    out << "Initial condition      : y(" << t0 << ") = " << y0 << "\n";
+    out << "Step size              : " << h << "\n";
+    out << "Steps                  : " << steps << "\n";
+
+    if (!records.empty()) {
+        const auto& last = records.back();
+        out << "Final t                : " << QString::number(last.nextT, 'f', 10) << "\n";
+        out << "Final y                : " << QString::number(last.nextY, 'f', 10) << "\n";
+    }
+
+    out << "\n";
+    if (methodText.contains("RK4", Qt::CaseInsensitive)) {
+        out << "ITER | t              | y              | k1             | k2             | k3             | k4             | NEXT t         | NEXT y         | STATUS\n";
+        out << "-------------------------------------------------------------------------------------------------------------------------------------------------\n";
+        for (const auto& r : records) {
+            out << QString("%1").arg(r.iteration, 4) << " | "
+                << QString("%1").arg(r.t, 14, 'f', 8) << " | "
+                << QString("%1").arg(r.y, 14, 'f', 8) << " | "
+                << QString("%1").arg(r.k1, 14, 'f', 8) << " | "
+                << QString("%1").arg(r.k2, 14, 'f', 8) << " | "
+                << QString("%1").arg(r.k3, 14, 'f', 8) << " | "
+                << QString("%1").arg(r.k4, 14, 'f', 8) << " | "
+                << QString("%1").arg(r.nextT, 14, 'f', 8) << " | "
+                << QString("%1").arg(r.nextY, 14, 'f', 8) << " | "
+                << r.status << "\n";
+        }
+    } else {
+        out << "ITER | t              | y              | f(t,y)         | NEXT t         | NEXT y         | STATUS\n";
+        out << "-----------------------------------------------------------------------------------------------------\n";
+        for (const auto& r : records) {
+            out << QString("%1").arg(r.iteration, 4) << " | "
+                << QString("%1").arg(r.t, 14, 'f', 8) << " | "
+                << QString("%1").arg(r.y, 14, 'f', 8) << " | "
+                << QString("%1").arg(r.slope, 14, 'f', 8) << " | "
+                << QString("%1").arg(r.nextT, 14, 'f', 8) << " | "
+                << QString("%1").arg(r.nextY, 14, 'f', 8) << " | "
+                << r.status << "\n";
+        }
+    }
+
+    out << "\nInterpretation: each row advances the initial value problem one step; Next y is the approximation carried into the next row.\n";
+    return true;
+}
+
+bool ExportManager::exportOdeCsv(const QString& filePath,
+                                 const QString& expressionText,
+                                 const QString& methodText,
+                                 double t0,
+                                 double y0,
+                                 double h,
+                                 int steps,
+                                 const std::vector<OdeIterationRecord>& records,
+                                 QString* errorMessage) {
+    QFile file(filePath);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        if (errorMessage) *errorMessage = file.errorString();
+        return false;
+    }
+
+    QTextStream out(&file);
+    out << "Differential Equation," << csvEscape("dy/dt = " + expressionText) << "\n";
+    out << "Method," << csvEscape(methodText) << "\n";
+    out << "Initial t," << t0 << "\n";
+    out << "Initial y," << y0 << "\n";
+    out << "Step Size," << h << "\n";
+    out << "Steps," << steps << "\n";
+    out << "Generated," << csvEscape(QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss")) << "\n\n";
+
+    if (methodText.contains("RK4", Qt::CaseInsensitive)) {
+        out << "Iteration,t,y,k1,k2,k3,k4,Next t,Next y,Status\n";
+        for (const auto& r : records) {
+            out << r.iteration << ','
+                << QString::number(r.t, 'g', 17) << ','
+                << QString::number(r.y, 'g', 17) << ','
+                << QString::number(r.k1, 'g', 17) << ','
+                << QString::number(r.k2, 'g', 17) << ','
+                << QString::number(r.k3, 'g', 17) << ','
+                << QString::number(r.k4, 'g', 17) << ','
+                << QString::number(r.nextT, 'g', 17) << ','
+                << QString::number(r.nextY, 'g', 17) << ','
+                << csvEscape(r.status) << "\n";
+        }
+    } else {
+        out << "Iteration,t,y,f(t,y),Next t,Next y,Status\n";
+        for (const auto& r : records) {
+            out << r.iteration << ','
+                << QString::number(r.t, 'g', 17) << ','
+                << QString::number(r.y, 'g', 17) << ','
+                << QString::number(r.slope, 'g', 17) << ','
+                << QString::number(r.nextT, 'g', 17) << ','
+                << QString::number(r.nextY, 'g', 17) << ','
+                << csvEscape(r.status) << "\n";
+        }
+    }
+
+    return true;
+}

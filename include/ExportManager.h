@@ -1,6 +1,7 @@
 #pragma once
 
 #include "IterationRecord.h"
+#include "OdeIterationRecord.h"
 #include <QString>
 #include <vector>
 
@@ -21,4 +22,24 @@ public:
                           int maxIterations,
                           const std::vector<IterationRecord>& records,
                           QString* errorMessage = nullptr);
+
+    static bool exportOdeTxt(const QString& filePath,
+                             const QString& expressionText,
+                             const QString& methodText,
+                             double t0,
+                             double y0,
+                             double h,
+                             int steps,
+                             const std::vector<OdeIterationRecord>& records,
+                             QString* errorMessage = nullptr);
+
+    static bool exportOdeCsv(const QString& filePath,
+                             const QString& expressionText,
+                             const QString& methodText,
+                             double t0,
+                             double y0,
+                             double h,
+                             int steps,
+                             const std::vector<OdeIterationRecord>& records,
+                             QString* errorMessage = nullptr);
 };

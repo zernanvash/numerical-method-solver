@@ -1,5 +1,6 @@
 #pragma once
 #include "IterationRecord.h"
+#include "OdeIterationRecord.h"
 #include <QWidget>
 #include <QTimer>
 #include <QImage>
@@ -10,6 +11,7 @@
 
 struct ThemePalette;
 enum class SolverMethod { Bisection, Newton, Secant };
+enum class GraphMode { RootFinding, OdeSimulation };
 
 class GraphWidget : public QWidget {
     Q_OBJECT
@@ -18,6 +20,7 @@ public:
 
     void setFunction(std::function<double(double)> f, const std::string& expr);
     void setIterations(const std::vector<IterationRecord>& recs, SolverMethod method);
+    void setOdeIterations(const std::vector<OdeIterationRecord>& recs, const std::string& expr, const std::string& method);
 
     void startReveal();
     void reset();
@@ -38,7 +41,10 @@ private:
     std::function<double(double)> m_func;
     std::string                   m_expr;
     std::vector<IterationRecord>  m_iters;
+    std::vector<OdeIterationRecord> m_odeIters;
+    std::string                   m_odeMethod;
     SolverMethod                  m_method = SolverMethod::Bisection;
+    GraphMode                     m_graphMode = GraphMode::RootFinding;
     int                           m_showUpTo = 0;
 
     QTimer* m_scanTimer;
@@ -73,6 +79,7 @@ private:
     double toWorldX(int sx)     const;
     double toWorldY(int sy)     const;
     void   autoRange();
+    void   autoRangeOde();
 
     void rebuildGraphBuffer();
     void drawGrid(QPainter& p);
@@ -82,6 +89,7 @@ private:
     void drawNewtonStep(QPainter& p, int n);
     void drawSecantStep(QPainter& p, int n);
     void drawRootMarker(QPainter& p, int n);
+    void drawOdePath(QPainter& p, int n);
     void drawScanline(QPainter& p);
     void applyDither(QImage& img);
     void applyScanlineRows(QImage& img);

@@ -1,6 +1,7 @@
 #pragma once
 #include "GraphWidget.h"
 #include "IterationRecord.h"
+#include "OdeIterationRecord.h"
 #include "CRTOverlay.h"
 #include "AppConfig.h"
 
@@ -28,6 +29,7 @@ private slots:
     void onSolve();
     void onStep();
     void onReset();
+    void onModeChanged(int index);
     void onMethodChanged(int index);
     void onFunctionChanged(const QString& text);
     void onStepTimerTick();
@@ -41,8 +43,13 @@ private:
     QScrollArea*  m_leftScroll = nullptr;
     QSplitter*    m_bodySplitter = nullptr;
     QLabel*       m_titleLabel = nullptr;
+    QComboBox*    m_modeBox = nullptr;
     QLineEdit*    m_fnInput = nullptr;
     QComboBox*    m_methodBox = nullptr;
+    QLabel*       m_paramALabel = nullptr;
+    QLabel*       m_paramBLabel = nullptr;
+    QLabel*       m_paramTolLabel = nullptr;
+    QLabel*       m_paramMaxLabel = nullptr;
     QLineEdit*    m_paramA = nullptr;
     QLineEdit*    m_paramB = nullptr;
     QLineEdit*    m_paramTol = nullptr;
@@ -61,6 +68,7 @@ private:
     CRTOverlay*   m_overlay = nullptr;
 
     std::vector<IterationRecord>  m_records;
+    std::vector<OdeIterationRecord> m_odeRecords;
     std::function<double(double)> m_func;
     int                           m_stepIndex = 0;
     QTimer*                       m_stepTimer = nullptr;
@@ -72,10 +80,15 @@ private:
     void applyConfig();
     void setStatus(const QString& msg, const QString& color = QString());
     void addIterRow(const IterationRecord& rec, bool highlight = false);
+    void addOdeRow(const OdeIterationRecord& rec, bool highlight = false);
     void clearTable();
+    void configureTableHeaders();
     void updateMethodLabels();
+    bool isOdeMode() const;
     SolverMethod currentMethod() const;
     QString currentMethodName() const;
+    QString currentOdeMethodName() const;
     void runCompute();
+    void runOdeCompute();
     bool ensureHasRecordsForExport();
 };

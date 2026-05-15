@@ -3,6 +3,9 @@
 #include "BisectionSolver.h"
 #include "NewtonSolver.h"
 #include "SecantSolver.h"
+#include "EulerOdeSolver.h"
+#include "RK4OdeSolver.h"
+#include "OdeFunctionParser.h"
 #include "ThemeManager.h"
 #include "ExportManager.h"
 
@@ -40,11 +43,19 @@ static const char* DESC_SECANT =
     "TYPE: OPEN METHOD\n"
     "NEEDS: TWO GUESSES\n"
     "CONV: SUPERLINEAR";
+static const char* DESC_EULER =
+    "TYPE: ODE IVP\n"
+    "RULE: y[n+1]=y[n]+h*f(t,y)\n"
+    "ORDER: FIRST";
+static const char* DESC_RK4 =
+    "TYPE: ODE IVP\n"
+    "RULE: 4 SLOPE SAMPLE\n"
+    "ORDER: FOURTH";
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent), m_config(AppConfig::load())
 {
-    setWindowTitle("ROOT-FINDING COMPUTATION CONSOLE v1.0");
+    setWindowTitle("NUMERICAL METHODS COMPUTATION CONSOLE v1.1");
     // Responsive minimum: small enough for laptops, but prevents unreadable crushing.
     setMinimumSize(760, 520);
 
@@ -63,7 +74,7 @@ void MainWindow::buildUI() {
     setCentralWidget(m_central);
 
     QHBoxLayout* headerRow = new QHBoxLayout;
-    m_titleLabel = new QLabel("ROOT-FINDING COMPUTATION CONSOLE  v1.0");
+    m_titleLabel = new QLabel("NUMERICAL METHODS COMPUTATION CONSOLE  v1.1");
     m_lblStatus = new QLabel("STATUS: READY");
     m_lblStatus->setObjectName("statusLabel");
     headerRow->addWidget(m_titleLabel);
@@ -73,6 +84,15 @@ void MainWindow::buildUI() {
     QVBoxLayout* leftPanel = new QVBoxLayout;
     leftPanel->setContentsMargins(0, 0, 0, 0);
     leftPanel->setSpacing(8);
+
+    QGroupBox* gbMode = new QGroupBox("MODE");
+    QVBoxLayout* modeLayout = new QVBoxLayout(gbMode);
+    m_modeBox = new QComboBox;
+    m_modeBox->addItems({"ROOT-FINDING MODE", "ODE SIMULATION MODE"});
+    connect(m_modeBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &MainWindow::onModeChanged);
+    modeLayout->addWidget(m_modeBox);
+    leftPanel->addWidget(gbMode);
 
     QGroupBox* gbFn = new QGroupBox("FUNCTION");
     QVBoxLayout* fnLayout = new QVBoxLayout(gbFn);
@@ -99,33 +119,35 @@ void MainWindow::buildUI() {
     QGridLayout* paramGrid = new QGridLayout(gbParams);
     paramGrid->setSpacing(5);
 
-    auto makeParamRow = [&](QGridLayout* g, int row,
-                             const QString& lbl, QLineEdit*& le, const QString& val) {
-        g->addWidget(new QLabel(lbl), row, 0);
-        le = new QLineEdit(val);
-        le->setMinimumWidth(70);
-        le->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-        g->addWidget(le, row, 1);
-    };
-
-    QLabel* lblA = new QLabel("a  >");
-    lblA->setObjectName("labelA");
+    m_paramALabel = new QLabel("a  >");
+    m_paramALabel->setObjectName("labelA");
     m_paramA = new QLineEdit("1");
     m_paramA->setMinimumWidth(70);
     m_paramA->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-    paramGrid->addWidget(lblA, 0, 0);
+    paramGrid->addWidget(m_paramALabel, 0, 0);
     paramGrid->addWidget(m_paramA, 0, 1);
 
-    QLabel* lblB = new QLabel("b  >");
-    lblB->setObjectName("labelB");
+    m_paramBLabel = new QLabel("b  >");
+    m_paramBLabel->setObjectName("labelB");
     m_paramB = new QLineEdit("2");
     m_paramB->setMinimumWidth(70);
     m_paramB->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-    paramGrid->addWidget(lblB, 1, 0);
+    paramGrid->addWidget(m_paramBLabel, 1, 0);
     paramGrid->addWidget(m_paramB, 1, 1);
 
-    makeParamRow(paramGrid, 2, "tol >", m_paramTol, m_config.defaultTolerance);
-    makeParamRow(paramGrid, 3, "max >", m_paramMax, QString::number(m_config.defaultMaxIterations));
+    m_paramTolLabel = new QLabel("tol >");
+    m_paramTol = new QLineEdit(m_config.defaultTolerance);
+    m_paramTol->setMinimumWidth(70);
+    m_paramTol->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    paramGrid->addWidget(m_paramTolLabel, 2, 0);
+    paramGrid->addWidget(m_paramTol, 2, 1);
+
+    m_paramMaxLabel = new QLabel("max >");
+    m_paramMax = new QLineEdit(QString::number(m_config.defaultMaxIterations));
+    m_paramMax->setMinimumWidth(70);
+    m_paramMax->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    paramGrid->addWidget(m_paramMaxLabel, 3, 0);
+    paramGrid->addWidget(m_paramMax, 3, 1);
     paramGrid->setColumnStretch(0, 0);
     paramGrid->setColumnStretch(1, 1);
 
@@ -276,7 +298,9 @@ void MainWindow::applyConfig() {
 }
 
 void MainWindow::onFunctionChanged(const QString& text) {
-    std::string err = FunctionParser::validate(text.toStdString());
+    std::string err = isOdeMode()
+            ? OdeFunctionParser::validate(text.toStdString())
+            : FunctionParser::validate(text.toStdString());
     if (err.empty()) {
         m_fnInput->setStyleSheet("");
     } else {
@@ -289,29 +313,74 @@ void MainWindow::onMethodChanged(int) {
     onReset();
 }
 
+void MainWindow::onModeChanged(int) {
+    const bool ode = isOdeMode();
+
+    m_methodBox->blockSignals(true);
+    m_methodBox->clear();
+    if (ode) {
+        m_methodBox->addItems({"EULER METHOD", "RK4 METHOD"});
+        m_fnInput->setText("0.5*y");
+        m_fnInput->setPlaceholderText("e.g. 0.5*y or -0.07*(y - 25)");
+        m_paramA->setText("0");
+        m_paramB->setText("100");
+        m_paramTol->setText("0.1");
+        m_paramMax->setText("20");
+    } else {
+        m_methodBox->addItems({"BISECTION", "NEWTON-RAPHSON", "SECANT"});
+        m_fnInput->setText("x^3 - x - 2");
+        m_fnInput->setPlaceholderText("e.g. x^3 - x - 2");
+        m_paramA->setText("1");
+        m_paramB->setText("2");
+        m_paramTol->setText(m_config.defaultTolerance);
+        m_paramMax->setText(QString::number(m_config.defaultMaxIterations));
+    }
+    m_methodBox->blockSignals(false);
+
+    updateMethodLabels();
+    onReset();
+}
+
 void MainWindow::updateMethodLabels() {
     int idx = m_methodBox->currentIndex();
-    QLabel* lblA = m_central->findChild<QLabel*>("labelA");
-    QLabel* lblB = m_central->findChild<QLabel*>("labelB");
     const char* desc = DESC_BISECT;
 
+    if (isOdeMode()) {
+        if (m_paramALabel) m_paramALabel->setText("t0 >");
+        if (m_paramBLabel) m_paramBLabel->setText("y0 >");
+        if (m_paramTolLabel) m_paramTolLabel->setText("h  >");
+        if (m_paramMaxLabel) m_paramMaxLabel->setText("steps >");
+        m_lblMethodInfo->setText(idx == 1 ? DESC_RK4 : DESC_EULER);
+        configureTableHeaders();
+        return;
+    }
+
+    if (m_paramTolLabel) m_paramTolLabel->setText("tol >");
+    if (m_paramMaxLabel) m_paramMaxLabel->setText("max >");
+
     if (idx == 0) {
-        if (lblA) lblA->setText("a  >");
-        if (lblB) lblB->setText("b  >");
+        if (m_paramALabel) m_paramALabel->setText("a  >");
+        if (m_paramBLabel) m_paramBLabel->setText("b  >");
         desc = DESC_BISECT;
     } else if (idx == 1) {
-        if (lblA) lblA->setText("x0 >");
-        if (lblB) lblB->setText("x1 >");
+        if (m_paramALabel) m_paramALabel->setText("x0 >");
+        if (m_paramBLabel) m_paramBLabel->setText("x1 >");
         desc = DESC_NEWTON;
     } else {
-        if (lblA) lblA->setText("x0 >");
-        if (lblB) lblB->setText("x1 >");
+        if (m_paramALabel) m_paramALabel->setText("x0 >");
+        if (m_paramBLabel) m_paramBLabel->setText("x1 >");
         desc = DESC_SECANT;
     }
     m_lblMethodInfo->setText(desc);
+    configureTableHeaders();
 }
 
 void MainWindow::runCompute() {
+    if (isOdeMode()) {
+        runOdeCompute();
+        return;
+    }
+
     std::string err = FunctionParser::validate(m_fnInput->text().toStdString());
     if (!err.empty()) {
         setStatus("STATUS: INVALID INPUT", ThemeManager::palette(m_config.theme).error.name());
@@ -346,11 +415,63 @@ void MainWindow::runCompute() {
     m_stepIndex = 0;
 }
 
+void MainWindow::runOdeCompute() {
+    std::string err = OdeFunctionParser::validate(m_fnInput->text().toStdString());
+    if (!err.empty()) {
+        setStatus(QString("STATUS: %1").arg(QString::fromStdString(err)).left(40),
+                  ThemeManager::palette(m_config.theme).error.name());
+        return;
+    }
+
+    bool okT = false, okY = false, okH = false, okSteps = false;
+    const double t0 = m_paramA->text().toDouble(&okT);
+    const double y0 = m_paramB->text().toDouble(&okY);
+    const double h = m_paramTol->text().toDouble(&okH);
+    const int steps = m_paramMax->text().toInt(&okSteps);
+
+    if (!okT || !okY || !okH || !okSteps) {
+        setStatus("STATUS: INVALID ODE INPUT", ThemeManager::palette(m_config.theme).error.name());
+        return;
+    }
+
+    try {
+        if (m_methodBox->currentIndex() == 1) {
+            m_odeRecords = RK4OdeSolver::solve(m_fnInput->text(), t0, y0, h, steps);
+        } else {
+            m_odeRecords = EulerOdeSolver::solve(m_fnInput->text(), t0, y0, h, steps);
+        }
+    } catch (const std::exception& ex) {
+        setStatus(QString("STATUS: ERR: %1").arg(ex.what()).left(40),
+                  ThemeManager::palette(m_config.theme).error.name());
+        return;
+    }
+
+    m_graph->setOdeIterations(m_odeRecords, m_fnInput->text().toStdString(),
+                              currentOdeMethodName().toStdString());
+    m_stepIndex = 0;
+}
+
 void MainWindow::onSolve() {
     m_stepTimer->stop();
     m_autoStepping = false;
     onReset();
     runCompute();
+    if (isOdeMode()) {
+        if (m_odeRecords.empty()) return;
+
+        setStatus("STATUS: SIMULATED", ThemeManager::palette(m_config.theme).accent.name());
+        clearTable();
+
+        for (const auto& r : m_odeRecords) addOdeRow(r, false);
+
+        const auto& last = m_odeRecords.back();
+        m_lblRoot->setText(QString("FINAL: t = %1\ny = %2")
+                           .arg(last.nextT, 0, 'f', 8)
+                           .arg(last.nextY, 0, 'f', 8));
+
+        m_graph->showUpToIteration(static_cast<int>(m_odeRecords.size()));
+        return;
+    }
     if (m_records.empty()) return;
 
     setStatus("STATUS: PROCESSING", ThemeManager::palette(m_config.theme).accent.name());
@@ -381,6 +502,30 @@ void MainWindow::onSolve() {
 }
 
 void MainWindow::onStep() {
+    if (isOdeMode()) {
+        if (m_odeRecords.empty()) {
+            runOdeCompute();
+            if (m_odeRecords.empty()) return;
+            clearTable();
+            setStatus("STATUS: SIMULATING", ThemeManager::palette(m_config.theme).accent.name());
+        }
+        if (m_stepIndex >= static_cast<int>(m_odeRecords.size())) return;
+
+        ++m_stepIndex;
+        const auto& rec = m_odeRecords[m_stepIndex - 1];
+        addOdeRow(rec, true);
+        m_iterTable->scrollToBottom();
+        m_graph->showUpToIteration(m_stepIndex);
+
+        m_lblRoot->setText(QString("t = %1\ny = %2")
+                           .arg(rec.nextT, 0, 'f', 6)
+                           .arg(rec.nextY, 0, 'f', 6));
+        setStatus(QString("STATUS: SIMULATING [%1/%2]")
+                  .arg(m_stepIndex).arg(m_odeRecords.size()),
+                  ThemeManager::palette(m_config.theme).accent.name());
+        return;
+    }
+
     if (m_records.empty()) {
         runCompute();
         if (m_records.empty()) return;
@@ -412,9 +557,10 @@ void MainWindow::onReset() {
     m_stepTimer->stop();
     m_autoStepping = false;
     m_records.clear();
+    m_odeRecords.clear();
     m_stepIndex = 0;
     clearTable();
-    m_lblRoot->setText("ROOT: —");
+    m_lblRoot->setText(isOdeMode() ? "FINAL: --" : "ROOT: --");
     setStatus("STATUS: READY", ThemeManager::palette(m_config.theme).text.name());
     m_graph->reset();
 }
@@ -527,32 +673,50 @@ void MainWindow::onSettings() {
 
 void MainWindow::onExportTxt() {
     if (!ensureHasRecordsForExport()) return;
-    QString defaultName = QString("root_report_%1.txt")
+    QString defaultName = QString("%1_report_%2.txt")
+            .arg(isOdeMode() ? "ode" : "root")
             .arg(QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss"));
     QString path = QFileDialog::getSaveFileName(this, "Export TXT Report", defaultName, "Text Files (*.txt)");
     if (path.isEmpty()) return;
     if (!path.endsWith(".txt", Qt::CaseInsensitive)) path += ".txt";
 
     QString err;
-    bool ok = ExportManager::exportTxt(path, m_fnInput->text(), currentMethodName(),
-                                       m_paramTol->text().toDouble(), m_paramMax->text().toInt(),
-                                       m_records, &err);
+    bool ok = false;
+    if (isOdeMode()) {
+        ok = ExportManager::exportOdeTxt(path, m_fnInput->text(), currentOdeMethodName(),
+                                         m_paramA->text().toDouble(), m_paramB->text().toDouble(),
+                                         m_paramTol->text().toDouble(), m_paramMax->text().toInt(),
+                                         m_odeRecords, &err);
+    } else {
+        ok = ExportManager::exportTxt(path, m_fnInput->text(), currentMethodName(),
+                                      m_paramTol->text().toDouble(), m_paramMax->text().toInt(),
+                                      m_records, &err);
+    }
     if (!ok) QMessageBox::warning(this, "Export Failed", err);
     else setStatus("STATUS: TXT EXPORTED", ThemeManager::palette(m_config.theme).accent.name());
 }
 
 void MainWindow::onExportCsv() {
     if (!ensureHasRecordsForExport()) return;
-    QString defaultName = QString("root_iterations_%1.csv")
+    QString defaultName = QString("%1_iterations_%2.csv")
+            .arg(isOdeMode() ? "ode" : "root")
             .arg(QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss"));
     QString path = QFileDialog::getSaveFileName(this, "Export CSV Data", defaultName, "CSV Files (*.csv)");
     if (path.isEmpty()) return;
     if (!path.endsWith(".csv", Qt::CaseInsensitive)) path += ".csv";
 
     QString err;
-    bool ok = ExportManager::exportCsv(path, m_fnInput->text(), currentMethodName(),
-                                       m_paramTol->text().toDouble(), m_paramMax->text().toInt(),
-                                       m_records, &err);
+    bool ok = false;
+    if (isOdeMode()) {
+        ok = ExportManager::exportOdeCsv(path, m_fnInput->text(), currentOdeMethodName(),
+                                         m_paramA->text().toDouble(), m_paramB->text().toDouble(),
+                                         m_paramTol->text().toDouble(), m_paramMax->text().toInt(),
+                                         m_odeRecords, &err);
+    } else {
+        ok = ExportManager::exportCsv(path, m_fnInput->text(), currentMethodName(),
+                                      m_paramTol->text().toDouble(), m_paramMax->text().toInt(),
+                                      m_records, &err);
+    }
     if (!ok) QMessageBox::warning(this, "Export Failed", err);
     else setStatus("STATUS: CSV EXPORTED", ThemeManager::palette(m_config.theme).accent.name());
 }
@@ -571,6 +735,14 @@ QString MainWindow::currentMethodName() const {
     case SolverMethod::Secant: return "Secant";
     default: return "Bisection";
     }
+}
+
+bool MainWindow::isOdeMode() const {
+    return m_modeBox && m_modeBox->currentIndex() == 1;
+}
+
+QString MainWindow::currentOdeMethodName() const {
+    return m_methodBox->currentIndex() == 1 ? "RK4 Method" : "Euler Method";
 }
 
 void MainWindow::setStatus(const QString& msg, const QString& color) {
@@ -614,11 +786,85 @@ void MainWindow::addIterRow(const IterationRecord& rec, bool highlight) {
     }
 }
 
+void MainWindow::addOdeRow(const OdeIterationRecord& rec, bool highlight) {
+    int row = m_iterTable->rowCount();
+    m_iterTable->insertRow(row);
+
+    auto mkItem = [](const QString& s) {
+        auto* it = new QTableWidgetItem(s);
+        it->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
+        return it;
+    };
+
+    const ThemePalette pal = ThemeManager::palette(m_config.theme);
+    QColor statusColor = rec.status.startsWith("ERROR") ? pal.error : pal.accent;
+
+    m_iterTable->setItem(row, 0, mkItem(QString::number(rec.iteration)));
+    m_iterTable->setItem(row, 1, mkItem(QString("%1").arg(rec.t, 12, 'f', 6)));
+    m_iterTable->setItem(row, 2, mkItem(QString("%1").arg(rec.y, 12, 'f', 6)));
+
+    if (m_methodBox->currentIndex() == 1) {
+        m_iterTable->setItem(row, 3, mkItem(QString("%1").arg(rec.k1, 12, 'f', 6)));
+        m_iterTable->setItem(row, 4, mkItem(QString("%1").arg(rec.k2, 12, 'f', 6)));
+        m_iterTable->setItem(row, 5, mkItem(QString("%1").arg(rec.k3, 12, 'f', 6)));
+        m_iterTable->setItem(row, 6, mkItem(QString("%1").arg(rec.k4, 12, 'f', 6)));
+        m_iterTable->setItem(row, 7, mkItem(QString("%1").arg(rec.nextT, 12, 'f', 6)));
+        m_iterTable->setItem(row, 8, mkItem(QString("%1").arg(rec.nextY, 12, 'f', 6)));
+        auto* stItem = mkItem(rec.status);
+        stItem->setForeground(statusColor);
+        m_iterTable->setItem(row, 9, stItem);
+    } else {
+        m_iterTable->setItem(row, 3, mkItem(QString("%1").arg(rec.slope, 12, 'f', 6)));
+        m_iterTable->setItem(row, 4, mkItem(QString("%1").arg(rec.nextT, 12, 'f', 6)));
+        m_iterTable->setItem(row, 5, mkItem(QString("%1").arg(rec.nextY, 12, 'f', 6)));
+        auto* stItem = mkItem(rec.status);
+        stItem->setForeground(statusColor);
+        m_iterTable->setItem(row, 6, stItem);
+    }
+
+    if (highlight) {
+        for (int c = 0; c < m_iterTable->columnCount(); ++c) {
+            if (auto* it = m_iterTable->item(row, c))
+                it->setBackground(pal.panel);
+        }
+    }
+}
+
 void MainWindow::clearTable() {
     m_iterTable->setRowCount(0);
 }
 
+void MainWindow::configureTableHeaders() {
+    if (!m_iterTable) return;
+
+    if (isOdeMode()) {
+        if (m_methodBox->currentIndex() == 1) {
+            m_iterTable->setColumnCount(10);
+            m_iterTable->setHorizontalHeaderLabels({"ITER", "t", "y", "k1", "k2", "k3", "k4", "NEXT t", "NEXT y", "STATUS"});
+        } else {
+            m_iterTable->setColumnCount(7);
+            m_iterTable->setHorizontalHeaderLabels({"ITER", "t", "y", "f(t,y)", "NEXT t", "NEXT y", "STATUS"});
+        }
+    } else {
+        m_iterTable->setColumnCount(5);
+        m_iterTable->setHorizontalHeaderLabels({"ITER", "X VALUE", "f(X)", "ERROR", "STATUS"});
+    }
+
+    m_iterTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    clearTable();
+}
+
 bool MainWindow::ensureHasRecordsForExport() {
+    if (isOdeMode()) {
+        if (!m_odeRecords.empty()) return true;
+
+        runOdeCompute();
+        if (!m_odeRecords.empty()) return true;
+
+        QMessageBox::information(this, "Nothing to Export", "Solve the ODE first before exporting.");
+        return false;
+    }
+
     if (!m_records.empty()) return true;
 
     runCompute();

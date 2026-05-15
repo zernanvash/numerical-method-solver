@@ -15,7 +15,7 @@ GraphWidget::GraphWidget(QWidget* parent)
     setAttribute(Qt::WA_OpaquePaintEvent);
 
     m_scanTimer = new QTimer(this);
-    m_scanTimer->setInterval(16); // ~60 fps
+    m_scanTimer->setInterval(100); // chunky ~10 fps CRT beam
     connect(m_scanTimer, &QTimer::timeout, this, &GraphWidget::onScanTick);
 }
 
@@ -24,19 +24,32 @@ GraphWidget::GraphWidget(QWidget* parent)
 void GraphWidget::setFunction(std::function<double(double)> f, const std::string& expr) {
     m_func = std::move(f);
     m_expr = expr;
+    m_graphMode = GraphMode::RootFinding;
     m_buffersReady = false;
 }
 
 void GraphWidget::setIterations(const std::vector<IterationRecord>& recs, SolverMethod method) {
     m_iters  = recs;
     m_method = method;
+    m_graphMode = GraphMode::RootFinding;
     m_showUpTo = 0;
     m_buffersReady = false;
     autoRange();
 }
 
+void GraphWidget::setOdeIterations(const std::vector<OdeIterationRecord>& recs, const std::string& expr, const std::string& method) {
+    m_odeIters = recs;
+    m_expr = expr;
+    m_odeMethod = method;
+    m_graphMode = GraphMode::OdeSimulation;
+    m_func = nullptr;
+    m_showUpTo = 0;
+    m_buffersReady = false;
+    autoRangeOde();
+}
+
 void GraphWidget::startReveal() {
-    if (!m_func) return;
+    if (!m_func && m_graphMode != GraphMode::OdeSimulation) return;
     m_scanY      = 0.0;
     m_scanning   = true;
     m_revealDone = false;
@@ -52,6 +65,10 @@ void GraphWidget::reset() {
     m_revealDone = false;
     m_scanY      = 0.0;
     m_showUpTo   = 0;
+    m_func = nullptr;
+    m_iters.clear();
+    m_odeIters.clear();
+    m_graphMode = GraphMode::RootFinding;
     m_buffersReady = false;
     update();
 }
@@ -139,10 +156,37 @@ void GraphWidget::autoRange() {
     m_yMax = yhi + ypad;
 }
 
+void GraphWidget::autoRangeOde() {
+    if (m_odeIters.empty()) {
+        m_xMin = -1.0; m_xMax = 4.0;
+        m_yMin = -3.0; m_yMax = 5.0;
+        return;
+    }
+
+    double tlo = m_odeIters.front().t;
+    double thi = m_odeIters.front().nextT;
+    double ylo = m_odeIters.front().y;
+    double yhi = m_odeIters.front().nextY;
+
+    for (const auto& r : m_odeIters) {
+        tlo = std::min({tlo, r.t, r.nextT});
+        thi = std::max({thi, r.t, r.nextT});
+        ylo = std::min({ylo, r.y, r.nextY});
+        yhi = std::max({yhi, r.y, r.nextY});
+    }
+
+    double tpad = std::max(0.5, (thi - tlo) * 0.12);
+    double ypad = std::max(1.0, (yhi - ylo) * 0.18);
+    m_xMin = tlo - tpad;
+    m_xMax = thi + tpad;
+    m_yMin = ylo - ypad;
+    m_yMax = yhi + ypad;
+}
+
 // ── Scanline timer ────────────────────────────────────────────────────────────
 
 void GraphWidget::onScanTick() {
-    m_scanY += m_scanSpeed;
+    m_scanY += std::max(12.0, m_scanSpeed * 6.0);
     if (m_scanY >= height()) {
         m_scanY      = height();
         m_revealDone = true;
@@ -166,7 +210,10 @@ void GraphWidget::rebuildGraphBuffer() {
     drawGrid(p);
     drawAxes(p);
 
-    if (m_func) {
+    if (m_graphMode == GraphMode::OdeSimulation) {
+        int n = m_showUpTo > 0 ? m_showUpTo : static_cast<int>(m_odeIters.size());
+        drawOdePath(p, n);
+    } else if (m_func) {
         drawCurve(p);
 
         int n = m_showUpTo > 0 ? m_showUpTo : static_cast<int>(m_iters.size());
@@ -182,7 +229,7 @@ void GraphWidget::rebuildGraphBuffer() {
     }
 
     // Draw axis tick labels (pixelated monospace via QPainter)
-    QFont mono("Courier New", 7);
+    QFont mono("Fixedsys", 7);
     mono.setStyleHint(QFont::TypeWriter);
     p.setFont(mono);
     p.setPen(m_dim);
@@ -369,11 +416,53 @@ void GraphWidget::drawRootMarker(QPainter& p, int n) {
     p.setBrush(Qt::NoBrush);
 
     // Label
-    QFont mono("Courier New", 8);
+    QFont mono("Fixedsys", 8);
     mono.setBold(true);
     p.setFont(mono);
     p.setPen(m_root);
     p.drawText(sx + 6, sy0 - 5, QString("x≈%1").arg(rec.x, 0, 'f', 5));
+}
+
+void GraphWidget::drawOdePath(QPainter& p, int n) {
+    if (m_odeIters.empty()) return;
+
+    n = std::clamp(n, 1, static_cast<int>(m_odeIters.size()));
+
+    p.setPen(QPen(m_curve, 2));
+    QPoint startPoint(toScreenX(m_odeIters.front().t), toScreenY(m_odeIters.front().y));
+
+    p.setBrush(QColor(m_curve.red(), m_curve.green(), m_curve.blue(), 180));
+    p.drawEllipse(startPoint, 3, 3);
+
+    for (int i = 0; i < n; ++i) {
+        const auto& rec = m_odeIters[i];
+        QPoint from(toScreenX(rec.t), toScreenY(rec.y));
+        QPoint to(toScreenX(rec.nextT), toScreenY(rec.nextY));
+
+        double alpha = 0.25 + 0.65 * (static_cast<double>(i + 1) / n);
+        QColor pathColor(m_curve.red(), m_curve.green(), m_curve.blue(), static_cast<int>(alpha * 255));
+        p.setPen(QPen(pathColor, 2));
+        p.drawLine(from, to);
+
+        p.setPen(Qt::NoPen);
+        p.setBrush(pathColor);
+        p.drawEllipse(to, 3, 3);
+    }
+
+    const auto& last = m_odeIters[n - 1];
+    QPoint finalPoint(toScreenX(last.nextT), toScreenY(last.nextY));
+    p.setBrush(m_root);
+    p.setPen(Qt::NoPen);
+    p.drawEllipse(finalPoint, 5, 5);
+
+    QFont mono("Fixedsys", 8);
+    mono.setBold(true);
+    p.setFont(mono);
+    p.setPen(m_root);
+    p.drawText(finalPoint.x() + 6, finalPoint.y() - 5,
+               QString("y=%1").arg(last.nextY, 0, 'f', 4));
+    p.setPen(m_dim);
+    p.drawText(8, 16, QString::fromStdString(m_odeMethod + "  t vs y"));
 }
 
 // ── CRT post-process passes ───────────────────────────────────────────────────
@@ -432,10 +521,10 @@ void GraphWidget::applyVignette(QImage& img) {
 void GraphWidget::paintEvent(QPaintEvent*) {
     QPainter p(this);
 
-    if (!m_func) {
+    if (!m_func && m_graphMode != GraphMode::OdeSimulation) {
         p.fillRect(rect(), m_bg);
         p.setPen(m_dim);
-        p.setFont(QFont("Courier New", 9));
+        p.setFont(QFont("Fixedsys", 9));
         p.drawText(rect(), Qt::AlignCenter, "NO FUNCTION LOADED");
         return;
     }
@@ -465,17 +554,13 @@ void GraphWidget::paintEvent(QPaintEvent*) {
 void GraphWidget::drawScanline(QPainter& p) {
     int y = static_cast<int>(m_scanY);
 
-    // Bright core line
-    p.setPen(QPen(m_scan, 1));
-    p.drawLine(0, y, width(), y);
-
-    // Soft glow above
-    for (int g = 1; g <= 4; ++g) {
-        int gy = y - g;
-        if (gy < 0) continue;
-        int alpha = static_cast<int>(120.0 * (1.0 - g / 5.0));
+    // Blocky phosphor sweep: a few hard rows instead of a smooth glow.
+    for (int band = 0; band < 6; ++band) {
+        int by = y - band;
+        if (by < 0) continue;
+        int alpha = band == 0 ? 230 : 150 - band * 18;
         p.setPen(QPen(QColor(m_scan.red(), m_scan.green(), m_scan.blue(), alpha), 1));
-        p.drawLine(0, gy, width(), gy);
+        p.drawLine(0, by, width(), by);
     }
 }
 
