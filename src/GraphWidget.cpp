@@ -8,6 +8,30 @@
 // Bayer 2x2 threshold matrix (values 0–3, divide by 4)
 static const int BAYER2[2][2] = {{0,2},{3,1}};
 
+static double niceTickStep(double span, int targetTicks = 8) {
+    if (!std::isfinite(span) || span <= 0.0) return 1.0;
+
+    const double raw = span / std::max(1, targetTicks);
+    const double mag = std::pow(10.0, std::floor(std::log10(raw)));
+    const double norm = raw / mag;
+
+    if (norm <= 1.0) return mag;
+    if (norm <= 2.0) return 2.0 * mag;
+    if (norm <= 5.0) return 5.0 * mag;
+    return 10.0 * mag;
+}
+
+static QString tickLabel(double value) {
+    const double absValue = std::abs(value);
+    if (absValue >= 1000.0 || (absValue > 0.0 && absValue < 0.01)) {
+        return QString::number(value, 'g', 3);
+    }
+    if (std::abs(value - std::round(value)) < 1e-8) {
+        return QString::number(static_cast<int>(std::round(value)));
+    }
+    return QString::number(value, 'f', 2);
+}
+
 GraphWidget::GraphWidget(QWidget* parent)
     : QWidget(parent)
 {
@@ -235,17 +259,21 @@ void GraphWidget::rebuildGraphBuffer() {
     p.setPen(m_dim);
 
     // X-axis labels
-    for (int wx = static_cast<int>(std::ceil(m_xMin)); wx <= static_cast<int>(m_xMax); ++wx) {
+    const double xStep = niceTickStep(m_xMax - m_xMin);
+    const double xStart = std::ceil(m_xMin / xStep) * xStep;
+    for (double wx = xStart; wx <= m_xMax + xStep * 0.5; wx += xStep) {
         int sx = toScreenX(wx);
         int sy = toScreenY(0.0);
-        p.drawText(sx - 8, std::clamp(sy + 12, 10, height() - 4), QString::number(wx));
+        p.drawText(sx - 12, std::clamp(sy + 12, 10, height() - 4), tickLabel(wx));
     }
     // Y-axis labels
-    for (int wy = static_cast<int>(std::ceil(m_yMin)); wy <= static_cast<int>(m_yMax); ++wy) {
-        if (wy == 0) continue;
+    const double yStep = niceTickStep(m_yMax - m_yMin);
+    const double yStart = std::ceil(m_yMin / yStep) * yStep;
+    for (double wy = yStart; wy <= m_yMax + yStep * 0.5; wy += yStep) {
+        if (std::abs(wy) < 1e-8) continue;
         int sx = toScreenX(0.0);
         int sy = toScreenY(wy);
-        p.drawText(std::clamp(sx + 3, 0, width() - 20), sy + 4, QString::number(wy));
+        p.drawText(std::clamp(sx + 3, 0, width() - 42), sy + 4, tickLabel(wy));
     }
 
     p.end();
