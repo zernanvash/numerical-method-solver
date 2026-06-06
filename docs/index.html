@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Numerical Method Solver — Documentation</title>
+    <meta name="description" content="Official documentation and guide for the Numerical Method Solver: an interactive step-by-step solver for root-finding and ordinary differential equations (ODE).">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&family=Share+Tech+Mono&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="crt-theme">
+
+    <!-- Navbar -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <a href="#" class="nav-logo">
+                <i class="fa-solid fa-terminal pulse-slow"></i> NUMERICAL_CONSOLE
+            </a>
+            <ul class="nav-menu">
+                <li><a href="#hero" class="nav-link active">Home</a></li>
+                <li><a href="#features" class="nav-link">Modes</a></li>
+                <li><a href="#methods" class="nav-link">Methods</a></li>
+                <li><a href="#cheatsheet" class="nav-link">Cheatsheet</a></li>
+                <li><a href="#guide" class="nav-link">Guide</a></li>
+                <li><a href="#credits" class="nav-link">Credits</a></li>
+            </ul>
+            <div class="nav-actions">
+                <a href="https://github.com/zernanvash/numerical-method-solver/releases/tag/v1.1.0" class="btn btn-outline btn-small" id="nav-dl-btn">
+                    <i class="fa-solid fa-download"></i> Get App
+                </a>
+            </div>
+            <button class="nav-toggle" id="nav-toggle" aria-label="Toggle Menu">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section" id="hero">
+        <div class="hero-bg-overlay"></div>
+        <div class="container hero-container">
+            <div class="hero-content">
+                <div class="terminal-tag">SYSTEM_READY // v1.1.0</div>
+                <h1 class="hero-title">Numerical Method Solver</h1>
+                <p class="hero-description">
+                    An interactive computing console designed to solve root-finding problems and simulate differential equations step-by-step. Visualize equations, trace iterations, and export results inside a beautiful retro-modern CRT simulation.
+                </p>
+                <div class="hero-buttons">
+                    <a href="https://github.com/zernanvash/numerical-method-solver/releases/tag/v1.1.0" class="btn btn-primary" id="hero-btn-download">
+                        <i class="fa-solid fa-download"></i> Download Windows Build
+                    </a>
+                    <a href="https://github.com/zernanvash/numerical-method-solver" class="btn btn-secondary" id="hero-btn-github">
+                        <i class="fa-brands fa-github"></i> GitHub Repo
+                    </a>
+                </div>
+            </div>
+            <div class="hero-showcase">
+                <div class="crt-monitor">
+                    <div class="crt-bezel">
+                        <div class="crt-screen">
+                            <div class="crt-overlay-lines"></div>
+                            <img src="preview.png" alt="Numerical Method Solver Application Screenshot" class="app-screenshot">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content Layout -->
+    <main class="container main-layout">
+        
+        <!-- Sidebar Navigation (Scrollspy) -->
+        <aside class="sidebar-nav">
+            <div class="sidebar-sticky">
+                <h3>Documentation</h3>
+                <ul class="scrollspy-list">
+                    <li><a href="#features" class="scrollspy-link"><i class="fa-solid fa-microchip"></i> Modes of Operation</a></li>
+                    <li><a href="#methods" class="scrollspy-link"><i class="fa-solid fa-calculator"></i> Solver Methods</a></li>
+                    <li><a href="#cheatsheet" class="scrollspy-link"><i class="fa-solid fa-list-check"></i> Math Cheatsheet</a></li>
+                    <li><a href="#guide" class="scrollspy-link"><i class="fa-solid fa-book-open"></i> Usage Workflow</a></li>
+                    <li><a href="#credits" class="scrollspy-link"><i class="fa-solid fa-users"></i> The Team</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Docs Content -->
+        <div class="docs-content">
+            
+            <!-- Modes section -->
+            <section id="features" class="doc-section">
+                <h2>Modes of Operation</h2>
+                <p>The console offers two main modes depending on the mathematical problem you want to solve. Toggle modes instantly using the <strong>MODE</strong> dropdown menu.</p>
+                
+                <div class="modes-grid">
+                    <div class="mode-card">
+                        <div class="mode-icon"><i class="fa-solid fa-chart-line"></i></div>
+                        <h3>Root-Finding Mode</h3>
+                        <p>Solve equations of the form <code>f(x) = 0</code>. Ideal for tracing exact convergence values and plotting algebraic/transcendental functions.</p>
+                        <ul class="mode-features">
+                            <li><i class="fa-solid fa-circle-check"></i> Interactive parameter bounds</li>
+                            <li><i class="fa-solid fa-circle-check"></i> Live tangent and secant line plots</li>
+                            <li><i class="fa-solid fa-circle-check"></i> Tolerance matching down to 1e-15</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mode-card">
+                        <div class="mode-icon"><i class="fa-solid fa-wave-square"></i></div>
+                        <h3>ODE Simulation Mode</h3>
+                        <p>Solve initial value problems of the form <code>dy/dt = f(t, y)</code>. Trace coordinates step-by-step and view vector-field trajectories.</p>
+                        <ul class="mode-features">
+                            <li><i class="fa-solid fa-circle-check"></i> Multi-variable function evaluations</li>
+                            <li><i class="fa-solid fa-circle-check"></i> Step size control (h)</li>
+                            <li><i class="fa-solid fa-circle-check"></i> Interactive step-by-step iteration reveal</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Methods Section -->
+            <section id="methods" class="doc-section">
+                <h2>Solver Methods</h2>
+                <p>Numerical Method Solver implements five standard methods. Click on each method below to explore its description, formula, and requirements.</p>
+
+                <!-- Interactive Method Tab Switcher -->
+                <div class="method-explorer">
+                    <div class="method-tabs">
+                        <button class="tab-btn active" data-method="bisection" id="tab-bisection">Bisection</button>
+                        <button class="tab-btn" data-method="newton" id="tab-newton">Newton-Raphson</button>
+                        <button class="tab-btn" data-method="secant" id="tab-secant">Secant</button>
+                        <button class="tab-btn" data-method="euler" id="tab-euler">Euler (ODE)</button>
+                        <button class="tab-btn" data-method="rk4" id="tab-rk4">RK4 (ODE)</button>
+                    </div>
+                    
+                    <div class="method-content-panel">
+                        <!-- Bisection Pane -->
+                        <div class="method-pane active" id="pane-bisection">
+                            <div class="pane-header">
+                                <h3>Bisection Method</h3>
+                                <span class="badge badge-bracket">Bracketing</span>
+                            </div>
+                            <p>A simple and robust root-finding method that repeatedly bisects an interval and selects a subinterval in which a root must lie.</p>
+                            <div class="formula-box">
+                                <div class="formula-title">Mathematical Formula</div>
+                                <div class="formula">c = \frac{a + b}{2}</div>
+                                <p class="formula-desc">Where <code>c</code> is the midpoint. The algorithm checks the sign of <code>f(a) * f(c)</code> to determine the next interval.</p>
+                            </div>
+                            <h4>Key Parameters Required</h4>
+                            <ul class="param-list">
+                                <li><code>a</code>: Lower boundary of the initial search interval.</li>
+                                <li><code>b</code>: Upper boundary of the initial search interval (must satisfy <code>f(a) * f(b) < 0</code>).</li>
+                                <li><code>tolerance</code>: Desired precision limit.</li>
+                                <li><code>max iterations</code>: Safety limit to prevent infinite loops.</li>
+                            </ul>
+                        </div>
+
+                        <!-- Newton Pane -->
+                        <div class="method-pane" id="pane-newton">
+                            <div class="pane-header">
+                                <h3>Newton-Raphson Method</h3>
+                                <span class="badge badge-open">Open Method</span>
+                            </div>
+                            <p>An open method that uses the tangent slope of the function at the current guess to project forward and estimate the root.</p>
+                            <div class="formula-box">
+                                <div class="formula-title">Mathematical Formula</div>
+                                <div class="formula">x_{n+1} = x_n - \frac{f(x_n)}{f'(x_n)}</div>
+                                <p class="formula-desc">In this application, the derivative <code>f'(x)</code> is calculated dynamically using central finite differences.</p>
+                            </div>
+                            <h4>Key Parameters Required</h4>
+                            <ul class="param-list">
+                                <li><code>x0</code>: The starting guess.</li>
+                                <li><code>tolerance</code>: Error threshold.</li>
+                                <li><code>max iterations</code>: Solver step limit.</li>
+                            </ul>
+                        </div>
+
+                        <!-- Secant Pane -->
+                        <div class="method-pane" id="pane-secant">
+                            <div class="pane-header">
+                                <h3>Secant Method</h3>
+                                <span class="badge badge-open">Open Method</span>
+                            </div>
+                            <p>An open method that approximates the derivative using a secant line drawn between the two most recent approximations.</p>
+                            <div class="formula-box">
+                                <div class="formula-title">Mathematical Formula</div>
+                                <div class="formula">x_{n+1} = x_n - f(x_n) \cdot \frac{x_n - x_{n-1}}{f(x_n) - f(x_{n-1})}</div>
+                                <p class="formula-desc">Requires two initial guesses but converges faster than Bisection without needing derivative analytical equations.</p>
+                            </div>
+                            <h4>Key Parameters Required</h4>
+                            <ul class="param-list">
+                                <li><code>x0</code>: First initial guess.</li>
+                                <li><code>x1</code>: Second initial guess.</li>
+                                <li><code>tolerance</code>: Target error bound.</li>
+                            </ul>
+                        </div>
+
+                        <!-- Euler Pane -->
+                        <div class="method-pane" id="pane-euler">
+                            <div class="pane-header">
+                                <h3>Euler's Method</h3>
+                                <span class="badge badge-ode">First-Order ODE</span>
+                            </div>
+                            <p>A first-order numerical procedure for solving ordinary differential equations (ODEs) with a given initial value.</p>
+                            <div class="formula-box">
+                                <div class="formula-title">Mathematical Formula</div>
+                                <div class="formula">y_{n+1} = y_n + h \cdot f(t_n, y_n)</div>
+                                <div class="formula">t_{n+1} = t_n + h</div>
+                                <p class="formula-desc">Where <code>h</code> is the step size and <code>f(t, y)</code> represents the derivative <code>dy/dt</code>.</p>
+                            </div>
+                            <h4>Key Parameters Required</h4>
+                            <ul class="param-list">
+                                <li><code>t0</code>: Initial value of the independent variable.</li>
+                                <li><code>y0</code>: Initial value of the dependent variable.</li>
+                                <li><code>h</code>: Step size.</li>
+                                <li><code>steps</code>: Total number of projection intervals.</li>
+                            </ul>
+                        </div>
+
+                        <!-- RK4 Pane -->
+                        <div class="method-pane" id="pane-rk4">
+                            <div class="pane-header">
+                                <h3>Runge-Kutta 4th Order (RK4)</h3>
+                                <span class="badge badge-ode">Fourth-Order ODE</span>
+                            </div>
+                            <p>A highly accurate fourth-order method that samples the slope of the differential equation four times across each step to estimate the trajectory.</p>
+                            <div class="formula-box">
+                                <div class="formula-title">Mathematical Formula</div>
+                                <div class="formula">k_1 = f(t_n, y_n), \quad k_2 = f\left(t_n + \frac{h}{2}, y_n + h\frac{k_1}{2}\right)</div>
+                                <div class="formula">k_3 = f\left(t_n + \frac{h}{2}, y_n + h\frac{k_2}{2}\right), \quad k_4 = f(t_n + h, y_n + h k_3)</div>
+                                <div class="formula">y_{n+1} = y_n + \frac{h}{6}(k_1 + 2k_2 + 2k_3 + k_4)</div>
+                            </div>
+                            <h4>Key Parameters Required</h4>
+                            <ul class="param-list">
+                                <li><code>t0</code>, <code>y0</code>: Initial state coordinates.</li>
+                                <li><code>h</code>: Step size.</li>
+                                <li><code>steps</code>: Number of steps.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Cheatsheet Section -->
+            <section id="cheatsheet" class="doc-section">
+                <h2>Math Expression Cheatsheet</h2>
+                <p>The parser evaluates expressions typed into the <strong>FUNCTION</strong> panel. Use explicit multiplication (e.g. <code>2*x</code> instead of <code>2x</code>).</p>
+                
+                <!-- Search bar for cheatsheet -->
+                <div class="search-container">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="cheatsheet-search" placeholder="Filter operators (e.g. sin, log, ^)...">
+                </div>
+
+                <div class="table-wrapper">
+                    <table class="cheatsheet-table" id="cheatsheet-table">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Syntax</th>
+                                <th>Description / Example</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr data-search="operator + - * / ^ add subtract multiply divide power">
+                                <td>Operators</td>
+                                <td><code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>^</code></td>
+                                <td>Standard arithmetic operations. Use <code>^</code> for exponentiation (e.g. <code>x^2</code>).</td>
+                            </tr>
+                            <tr data-search="trigonometric sin cos tan sine cosine tangent">
+                                <td>Trig Functions</td>
+                                <td><code>sin(x)</code>, <code>cos(x)</code>, <code>tan(x)</code></td>
+                                <td>Standard trigonometry. Trigonometric arguments evaluate in radians.</td>
+                            </tr>
+                            <tr data-search="logarithm log ln log10 natural base">
+                                <td>Logarithms</td>
+                                <td><code>log(x)</code>, <code>ln(x)</code>, <code>log10(x)</code></td>
+                                <td><code>ln(x)</code> evaluates the natural logarithm, <code>log10</code> is base-10.</td>
+                            </tr>
+                            <tr data-search="math square root sqrt abs absolute value">
+                                <td>Roots & Absolute</td>
+                                <td><code>sqrt(x)</code>, <code>abs(x)</code></td>
+                                <td>Square root and absolute value computations.</td>
+                            </tr>
+                            <tr data-search="constant pi e 3.14159 euler">
+                                <td>Constants</td>
+                                <td><code>pi</code>, <code>e</code></td>
+                                <td>Mathematical constants. Case-insensitive (e.g. <code>sin(pi)</code> equals 0).</td>
+                            </tr>
+                            <tr data-search="variables x t y independent dependent">
+                                <td>Variables</td>
+                                <td><code>x</code> (Root) <br> <code>t</code>, <code>y</code> (ODE)</td>
+                                <td>Use <code>x</code> for root-finding. Use <code>t</code> (time) and <code>y</code> (value) for ODE.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Guide Section -->
+            <section id="guide" class="doc-section">
+                <h2>Usage Workflow</h2>
+                <p>Follow this standard operating procedure to compute solutions using the console application:</p>
+                
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-number">1</div>
+                        <div class="timeline-body">
+                            <h4>Select Problem Mode</h4>
+                            <p>Select <strong>Root-Finding Mode</strong> or <strong>ODE Simulation Mode</strong> in the top dropdown box. The inputs will automatically configure themselves for your selection.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-number">2</div>
+                        <div class="timeline-body">
+                            <h4>Enter Equation & Parameters</h4>
+                            <p>Type your mathematical expression in the <strong>FUNCTION</strong> text field. Provide the parameters in the grid fields (initial guesses, step sizing, target tolerance, or max iteration bounds).</p>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-number">3</div>
+                        <div class="timeline-body">
+                            <h4>Calculate or Step Trace</h4>
+                            <p>Click <strong>[ SOLVE ]</strong> to execute the full calculations instantly. Alternatively, use <strong>[ STEP ]</strong> to run the solver row by row and watch the CRT graph animate the progress interactively.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-number">4</div>
+                        <div class="timeline-body">
+                            <h4>Export Reports</h4>
+                            <p>Save your results for homework or research logs by clicking <strong>[ EXPORT TXT ]</strong> for a structured summary report, or <strong>[ EXPORT CSV ]</strong> to save raw numerical table data.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Credits Section -->
+            <section id="credits" class="doc-section">
+                <h2>Development Team</h2>
+                <p>This software console was engineered and designed by the following development team:</p>
+                
+                <div class="credits-grid">
+                    <div class="credit-card">
+                        <div class="credit-avatar"><i class="fa-solid fa-code"></i></div>
+                        <h4>Arive, Zernan Vash</h4>
+                        <p class="role">Software Architect & Lead Dev</p>
+                    </div>
+                    <div class="credit-card">
+                        <div class="credit-avatar"><i class="fa-solid fa-palette"></i></div>
+                        <h4>Cali, Marianne Charesse</h4>
+                        <p class="role">UI/UX Designer</p>
+                    </div>
+                    <div class="credit-card">
+                        <div class="credit-avatar"><i class="fa-solid fa-chart-pie"></i></div>
+                        <h4>Landicho, Amethyst Mikaela</h4>
+                        <p class="role">QA & Algorithmic Analyst</p>
+                    </div>
+                    <div class="credit-card">
+                        <div class="credit-avatar"><i class="fa-solid fa-keyboard"></i></div>
+                        <h4>Meneses, Chaeil</h4>
+                        <p class="role">Technical Writer & Data Specialist</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container footer-container">
+            <div class="footer-logo">
+                <i class="fa-solid fa-terminal"></i> Numerical Method Solver
+            </div>
+            <div class="footer-links">
+                <a href="https://github.com/zernanvash/numerical-method-solver"><i class="fa-brands fa-github"></i> Repository</a>
+                <a href="https://github.com/zernanvash/numerical-method-solver/releases"><i class="fa-solid fa-tags"></i> Releases</a>
+            </div>
+            <div class="footer-copy">
+                &copy; 2026 Numerical Console Team. All rights reserved. Created for educational purposes.
+            </div>
+        </div>
+    </footer>
+
+    <!-- Custom JS -->
+    <script src="script.js"></script>
+</body>
+</html>
