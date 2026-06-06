@@ -1,11 +1,5 @@
 # Numerical Method Solver
 
-- Arive, Zernan Vash
-- Cali, Marianne Charesse
-- Estrada, Miguel Isaac
-- Landicho, Amethyst Mikaela
-- Meneses, Chaeil
-
 Numerical Method Solver is an interactive numerical methods program for learning how equations are solved step by step. It has two main modes:
 
 - **Root-Finding Mode** for solving `f(x) = 0`
@@ -18,6 +12,12 @@ Download the portable Windows build from the release page:
 https://github.com/zernanvash/numerical-method-solver/releases/tag/v1.1.0
 
 Extract the zip from the release and run `NumericalRootFinder.exe`.
+
+- Arive, Zernan Vash
+- Cali, Marianne Charesse
+- Estrada, Miguel Isaac
+- Landicho, Amethyst Mikaela
+- Meneses, Chaeil
 
 ---
 
