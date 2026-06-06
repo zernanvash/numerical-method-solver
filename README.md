@@ -1,6 +1,5 @@
 # Numerical Method Solver
 
-**Credits:**
 - Arive, Zernan Vash
 - Cali, Marianne Charesse
 - Estrada, Miguel Isaac
