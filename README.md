@@ -15,7 +15,6 @@ Extract the zip from the release and run `NumericalRootFinder.exe`.
 
 - Arive, Zernan Vash
 - Cali, Marianne Charesse
-- Estrada, Miguel Isaac
 - Landicho, Amethyst Mikaela
 - Meneses, Chaeil
 
