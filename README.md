@@ -11,6 +11,8 @@ Numerical Method Solver is an interactive numerical methods program for learning
 - **Root-Finding Mode** for solving `f(x) = 0`
 - **Differential Equation Simulation Mode** for solving initial value problems of the form `dy/dt = f(t, y)`
 
+![Numerical Method Solver UI Preview](preview.png)
+
 Download the portable Windows build from the release page:
 
 https://github.com/zernanvash/numerical-method-solver/releases/tag/v1.1.0
