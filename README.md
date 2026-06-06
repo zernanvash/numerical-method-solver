@@ -1,5 +1,12 @@
 # Numerical Method Solver
 
+**Credits:**
+- Arive, Zernan Vash
+- Cali, Marianne Charesse
+- Estrada, Miguel Isaac
+- Landicho, Amethyst Mikaela
+- Meneses, Chaeil
+
 Numerical Method Solver is an interactive numerical methods program for learning how equations are solved step by step. It has two main modes:
 
 - **Root-Finding Mode** for solving `f(x) = 0`
